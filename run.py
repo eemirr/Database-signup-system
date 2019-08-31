@@ -19,8 +19,7 @@ class Main(QTabWidget):
 
 	def __init__(self):
 		super(Main, self).__init__()
-
-
+		
 		self.dbname = 'data.db'
 		self.tablename = 'kayıt'
 
@@ -268,7 +267,7 @@ class Main(QTabWidget):
 		self.changeme_db = QLineEdit()
 		self.changeme_db.setFont(QFont('Arial',17,QFont.Bold,QFont.StyleItalic))
 
-		self.changeme_dbtext = QLabel('Veritabanı Adını Değiştirin')
+		self.changeme_dbtext = QLabel('Veritabanı Adı Ekleyin')
 		self.changeme_dbtext.setFont(QFont('Arial',17,QFont.StyleItalic))
 
 		self.changeme_table = QLineEdit()
@@ -287,7 +286,7 @@ class Main(QTabWidget):
 		self.db_seclection.setFont(QFont('Arial',17,QFont.StyleItalic))
 
 		self.db_seclectionbtn = QPushButton('Veritabanı Adını Seç')
-		self.db_seclectionbtn.setFont(QFont('Arial',16,QFont.StyleItalic))
+		self.db_seclectionbtn.setFont(QFont('Arial',17,QFont.StyleItalic))
 		self.db_seclectionbtn.clicked.connect(self.db_select)
 
 		self.table_selectiontext = QLabel('Veritabanı Tablo Adını Seç')
@@ -343,42 +342,35 @@ class Main(QTabWidget):
 		try:
 			if len(self.db_seclection.text()) > 1:
 				del self.dbname
-				self.dbname = self.db_seclection.text()
+				self.dbname = self.db_seclection.text().strip().replace(' ','_')
 				self.con = sql.Connection(self.dbname)
 				self.csr = self.con.cursor()
 				self.csr.execute('CREATE TABLE IF NOT EXISTS {} (id INTEGER PRIMARY KEY,title TEXT,side TEXT,data1 TEXT,data2 TEXT)'.format(self.tablename))
 				self.con.commit()
+				self.msg_err.setText('Veritabanı Seçildi')
 		except Exception as e:
 			self.msg_err.setText('Err : ' + str(e))
-
 
 	def tableselect(self):
 		try:
 			if len(self.table_selection.text()) > 1:				
-				self.tablename = self.table_selection.text()
-				self.csr.execute('select * from {}'.format(self.tablename))
+				self.tablename = self.table_selection.text().strip().replace(' ','_')
+				self.csr.execute('select id from {}'.format(self.tablename))
+				self.msg_err.setText('Veritabanı Tablosu Seçildi')
 		except Exception as e:
 			self.msg_err.setText('ERR :  Yanlış Veritabanı Adı')
-		print('table : ' + self.tablename)
 
 	def new_database(self):
 		if len(self.changeme_db.text()) > 0:
+			self.dbname = self.changeme_db.text().strip()
+			print(self.dbname)
+			
+			if len(self.dbname.split()) > 1:
+				self.dbname = self.dbname.strip().replace(' ','_')
 
-			self.dbname = self.changeme_db.text()
-			if len(self.changeme_table.text()) > 1:
-				a = str(self.changeme_table.text()).split()
-				print(a)
-				if len(a) > 1:
-					self.tablename = ''
-					for i in a:
-						self.tablename = self.tablename + i + '_'
+			if len(self.changeme_table.text().strip().split()) > 1:
+				self.tablename = self.changeme_table.text().strip().replace(' ','_')
 
-					if self.tablename.endswith('_'):
-						self.tablename = self.tablename[0:-1]
-						print(self.tablename)
-				else:
-					self.tablename = self.changeme_table.text()					
-				
 				del self.con;del self.csr
 				self.con = sql.Connection(self.dbname)
 				self.csr = self.con.cursor()
@@ -386,15 +378,17 @@ class Main(QTabWidget):
 				self.msg_err.setText('Veritabanı Başarılı Bir Şekilde Eklendi...')
 			else:
 			# Veritabanı adı girilipte tablo ismi girilmezse tablename değişmeden {} adında bir tablo oluştursun demek istiyorum.
-				self.csr.execute('CREATE TABLE IF NOT EXISTS {} (id INTEGER PRIMARY KEY,title TEXT,side TEXT,data1 TEXT,data2 TEXT)'.format(self.tablename))
+			    del self.con;del self.csr
+			    self.con = sql.Connection(self.dbname)
+			    self.csr = self.con.cursor()
+			    self.csr.execute('CREATE TABLE IF NOT EXISTS {} (id INTEGER PRIMARY KEY,title TEXT,side TEXT,data1 TEXT,data2 TEXT)'.format(self.tablename))
 		else:
 			self.msg_err.setText('Lütfen Tüm Form Alanlarını Doldurunuz...')
 
 	def add_newtable(self):
 
-		print(self.changeme_table.text())
 		if len(self.changeme_table.text()) > 1:
-			self.tablename = self.changeme_table.text()
+			self.tablename = self.changeme_table.text().strip().replace(' ','_')			
 			# tablename değiştirmemin sebebi global olup diğer fonksiyonlardaki işlemleri eklemesinden dolayıdır.
 			self.csr.execute('CREATE TABLE IF NOT EXISTS {} (id INTEGER PRIMARY KEY,title TEXT,side TEXT,data1 TEXT,data2 TEXT)'.format(self.tablename))
 			self.msg_err.setText('Tablo Başarılı Bir Şekilde Eklendi...')
@@ -402,10 +396,10 @@ class Main(QTabWidget):
 			self.msg_err.setText('Lütfen Bir Tablo Adı Giriniz.')
 
 	def tablolistele(self):
-		print(self.tablename)
+
 		self.csr.execute("select name from sqlite_master where type='table'")
 		self.datas = self.csr.fetchall()
-		self.msg_err.setText('Veritabanı Adı : ' + str(self.dbname) + '\nTabloların Adı :  ' + str(self.tablename) + '\n')
+		self.msg_err.setText('Mevcut Veritabanı Adı : ' + str(self.dbname) + '\nMevcut Tablonun Adı :  ' + str(self.tablename) + '\nTabloların Listesi\n')
 		for i in self.datas:
 			self.msg_err.setText(self.msg_err.toPlainText() + ' | ' + i[0])
 		self.msg_err.setText(self.msg_err.toPlainText() + ' | ')
@@ -417,7 +411,7 @@ class Main(QTabWidget):
 		try:
 			if len(self.save_dbname1.text()) >= 1:
 				try:
-					self.tablename = self.save_dbname1.text()
+					self.tablename = self.save_dbname1.text().strip().replace(' ','_')					
 					self.csr.execute('select id from {}'.format(self.tablename))
 				except Exception as e:
 					self.err.setText('VeriTabanı Tablosuna bağlanılamadı ')
@@ -425,27 +419,28 @@ class Main(QTabWidget):
 					if len(self.title.text()) >= 1 and len(self.side.text()) >= 1 and len(self.data1.toPlainText()) >= 1 and len(self.data2.toPlainText()) >= 1:
 						self.csr.execute('INSERT INTO {} (title,side,data1,data2) VALUES ("{}","{}","{}","{}")'.format(self.tablename,self.title.text().strip().lower().title(),self.side.text().strip().lower().title(),self.data1.toPlainText().strip().lower().title(),self.data2.toPlainText().strip().lower().title()))
 						self.con.commit()
+						self.error.setText('Kayıt Başarılı Bir Şekilde Gerçekleşti.')
 					elif len(self.title.text()) >= 1 and len(self.side.text()) >= 1 and len(self.data1.toPlainText()) >= 1:
-						print(self.title.text(),self.side.text(),self.data1.toPlainText(),sep="\t")
 						self.csr.execute('INSERT INTO {} (title,side,data1,data2) VALUES ("{}","{}","{}","{}")'.format(self.tablename,self.title.text().strip().lower().title(),self.side.text().strip().lower().title(),self.data1.toPlainText().strip().lower().title(),''))
 						self.con.commit()
+						self.error.setText('Kayıt Başarılı Bir Şekilde Gerçekleşti.')
 					elif len(self.title.text()) >= 1 and len(self.side.text()) >= 1 and len(self.data2.toPlainText()) >= 1:
-						print(self.title.text(),self.side.text(),self.data1.toPlainText(),sep="\t")
 						self.csr.execute("INSERT INTO {} (title,side,data1,data2) VALUES ('{}','{}','{}','{}')".format(self.tablename,self.title.text().strip().lower().title(),self.side.text().strip().lower().title(),self.data2.toPlainText().strip().lower().title(),''))
-						self.con.commit()					
+						self.con.commit()
+						self.error.setText('Kayıt Başarılı Bir Şekilde Gerçekleşti.')
 					elif len(self.title.text()) >= 1 and len(self.data1.toPlainText()) >= 1:
 						self.csr.execute('INSERT INTO {} (title,side,data1,data2) VALUES ("{}","{}","{}","{}")'.format(self.tablename,self.title.text().strip().lower().title(),'',self.data1.toPlainText().strip().lower().title(),''))
 						self.con.commit()
+						self.error.setText('Kayıt Başarılı Bir Şekilde Gerçekleşti.')
 					elif len(self.title.text()) >= 1 and len(self.data2.toPlainText()) >= 1:
 						self.csr.execute('INSERT INTO {} (title,side,data1,data2) VALUES ("{}","{}","{}","{}")'.format(self.tablename,self.title.text().strip().lower().title(),'',self.data2.toPlainText().strip().lower().title(),''))
 						self.con.commit()
+						self.error.setText('Kayıt Başarılı Bir Şekilde Gerçekleşti.')
 					else:
 						self.error.setText('en az bir girdi olmalı')
 					self.con.commit()
-		except IndexError as e:
-			self.error.setText(str(e))
-		else:
-			self.error.setText('Bir Hata ile Karşılaşılmadı')			
+		except Exception as e:
+			self.error.setText("ERR  : \n" + str(e))
 
 	def clear(self):
 		self.title.setText('')
@@ -461,29 +456,30 @@ class Main(QTabWidget):
 	def all_connected(self):
 		try:
 			self.csr.execute('select * from {}'.format(self.tablename))
-			self.datas = self.csr.fetchall()
-			print(self.datas)
+			self.csr.fetchall()
+		except Exception as e:
+			self.warning.setText('Veriler Okunamadı')
+		else:
+			try:
+				self.csr.execute('select * from {}'.format(self.tablename))
+				self.datas = self.csr.fetchall()
 
-			for i in self.datas:
-				self.read.setText(self.read.toPlainText() + "\nID\n" + str(i[0]) + "\n")
-				self.read.setText(self.read.toPlainText() + "\nTITLE\n" + i[1] + "\n")
-				self.read.setText(self.read.toPlainText() + "\nSIDE\n" + i[2] + "\n")
-				self.read.setText(self.read.toPlainText() + "\nDATA1\n" + i[3] + "\n")
-				self.read.setText(self.read.toPlainText() + "\nDATA2\n" + i[4] + "\n\n")
-				self.read.setText(self.read.toPlainText() + "\n" + "-"*113)
-
-			self.warning.setText('Veriler Başarılı Bir Şekilde Okundu...')
-
-
-		except IndexError as e:
-			self.warning.setText('Veriler Okunamadı\n' + str(e))
+				for i in self.datas:
+					self.read.setText(self.read.toPlainText() + "\nID\n" + str(i[0]) + "\n")
+					self.read.setText(self.read.toPlainText() + "\nTITLE\n" + i[1] + "\n")
+					self.read.setText(self.read.toPlainText() + "\nSIDE\n" + i[2] + "\n")
+					self.read.setText(self.read.toPlainText() + "\nDATA1\n" + i[3] + "\n")
+					self.read.setText(self.read.toPlainText() + "\nDATA2\n" + i[4] + "\n\n")
+					self.read.setText(self.read.toPlainText() + "\n" + "-"*113)
+				self.warning.setText('Veriler Başarılı Bir Şekilde Okundu...')
+			except Exception as e:
+				self.warning.setText('Veriler Okunamadı\n' + str(e))
 
 	def search(self):
 
 		try:
 			self.proc = []
 			self.out_point = False
-			print(self.selection.currentText())
 
 			if self.selection.currentText() == 'Başlığa Göre Ara':
 				if len(self.search1.text()) > 1:
@@ -628,10 +624,8 @@ class Main(QTabWidget):
 	def outputs(self):
 		# read
 		fsave = QFileDialog.getSaveFileName(self,'Dosyayı Kaydet','save.csv','csv,txt')
-		print(fsave)
 
 		if fsave[0][-3:].lower() == 'csv':
-			print('csv file online')
 
 			with open(fsave[0],'a') as fopen:
 				csv_writer = csv.writer(fopen,delimiter=',')				
@@ -681,22 +675,28 @@ class Main(QTabWidget):
 		self.err.setText('') 
 
 	def refresh(self):
-		self.csr.execute('select * from {}'.format(self.tablename))
-		self.identify.clear()
-		self.identify.addItems([str(i[0]) for i in self.csr.fetchall()])
+		try:
+			self.csr.execute('select id from {}'.format(self.tablename))
+			self.identify.clear()
+			self.identify.addItems([str(i[0]) for i in self.csr.fetchall()])
+		except Exception as e:
+			self.err.setText('Err : Veritabanı Bulunamadı\n' + str(e))
 
 	def sorgu_sil(self):
-		self.csr.execute('select id from {}'.format(self.tablename))
-		sql_del,booling = QInputDialog.getItem(self,'Veri Silme Bölümü','Hangi Veriyi Silicekseniz ID Numarasını Seçiniz',[str(i[0]) for i in self.csr.fetchall()],0,False)
+		try:
+			self.csr.execute('select id from {}'.format(self.tablename))
+			sql_del,booling = QInputDialog.getItem(self,'Veri Silme Bölümü','Hangi Veriyi Silicekseniz ID Numarasını Seçiniz',[str(i[0]) for i in self.csr.fetchall()],0,False)
 
-		if booling:
-			try:
-				self.csr.execute('DELETE FROM {} where id = "{}"'.format(self.tablename,sql_del))
-				self.con.commit()
-				self.err.setText(self.err.toPlainText() + '\n{} Numaralı Kayıt Başarıyla Silindi'.format(sql_del) )
-			except Exception as e:
-				self.err.setText(self.err.toPlainText() + '\n' + str(e))
-
+			if booling:
+				try:
+					self.csr.execute('DELETE FROM {} where id = "{}"'.format(self.tablename,sql_del))
+					self.con.commit()
+					self.err.setText(self.err.toPlainText() + '\n{} Numaralı Kayıt Başarıyla Silindi'.format(sql_del) )
+				except Exception as e:
+					self.err.setText(self.err.toPlainText() + '\n' + str(e))
+		except Exception as e:
+			self.err.setText('ERR : ' + str(e))
+					
 	# Düzen method start
 
 
