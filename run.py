@@ -417,30 +417,30 @@ class Main(QTabWidget):
 					self.err.setText('VeriTabanı Tablosuna bağlanılamadı ')
 				else:
 					if len(self.title.text()) >= 1 and len(self.side.text()) >= 1 and len(self.data1.toPlainText()) >= 1 and len(self.data2.toPlainText()) >= 1:
-						self.csr.execute('INSERT INTO {} (title,side,data1,data2) VALUES ("{}","{}","{}","{}")'.format(self.tablename,self.title.text().strip().lower().title(),self.side.text().strip().lower().title(),self.data1.toPlainText().strip().lower().title(),self.data2.toPlainText().strip().lower().title()))
+						self.csr.execute(f"INSERT INTO {self.tablename} (title,side,data1,data2) VALUES (?,?,?,?)",(self.title.text().strip().lower().title(),self.side.text().strip().lower().title(),self.data1.toPlainText().strip().lower().title(),self.data2.toPlainText().strip().lower().title()))
 						self.con.commit()
 						self.error.setText('Kayıt Başarılı Bir Şekilde Gerçekleşti.')
 					elif len(self.title.text()) >= 1 and len(self.side.text()) >= 1 and len(self.data1.toPlainText()) >= 1:
-						self.csr.execute('INSERT INTO {} (title,side,data1,data2) VALUES ("{}","{}","{}","{}")'.format(self.tablename,self.title.text().strip().lower().title(),self.side.text().strip().lower().title(),self.data1.toPlainText().strip().lower().title(),''))
+						self.csr.execute(f"INSERT INTO {self.tablename} (title,side,data1,data2) VALUES (?,?,?,?)",(self.title.text().strip().lower().title(),self.side.text().strip().lower().title(),self.data1.toPlainText().strip().lower().title(),''))
 						self.con.commit()
 						self.error.setText('Kayıt Başarılı Bir Şekilde Gerçekleşti.')
 					elif len(self.title.text()) >= 1 and len(self.side.text()) >= 1 and len(self.data2.toPlainText()) >= 1:
-						self.csr.execute("INSERT INTO {} (title,side,data1,data2) VALUES ('{}','{}','{}','{}')".format(self.tablename,self.title.text().strip().lower().title(),self.side.text().strip().lower().title(),self.data2.toPlainText().strip().lower().title(),''))
+						self.csr.execute(f"INSERT INTO {self.tablename} (title,side,data1,data2) VALUES (?,?,?,?)",(self.title.text().strip().lower().title(),self.side.text().strip().lower().title(),self.data2.toPlainText().strip().lower().title(),''))
 						self.con.commit()
 						self.error.setText('Kayıt Başarılı Bir Şekilde Gerçekleşti.')
 					elif len(self.title.text()) >= 1 and len(self.data1.toPlainText()) >= 1:
-						self.csr.execute('INSERT INTO {} (title,side,data1,data2) VALUES ("{}","{}","{}","{}")'.format(self.tablename,self.title.text().strip().lower().title(),'',self.data1.toPlainText().strip().lower().title(),''))
+						self.csr.execute(f"INSERT INTO {self.tablename} (title,side,data1,data2) VALUES (?,?,?,?)",(self.title.text().strip().lower().title(),'',self.data1.toPlainText().strip().lower().title(),''))
 						self.con.commit()
 						self.error.setText('Kayıt Başarılı Bir Şekilde Gerçekleşti.')
 					elif len(self.title.text()) >= 1 and len(self.data2.toPlainText()) >= 1:
-						self.csr.execute('INSERT INTO {} (title,side,data1,data2) VALUES ("{}","{}","{}","{}")'.format(self.tablename,self.title.text().strip().lower().title(),'',self.data2.toPlainText().strip().lower().title(),''))
+						self.csr.execute(f"INSERT INTO {self.tablename} (title,side,data1,data2) VALUES (?,?,?,?)",(self.title.text().strip().lower().title(),'',self.data2.toPlainText().strip().lower().title(),''))
 						self.con.commit()
 						self.error.setText('Kayıt Başarılı Bir Şekilde Gerçekleşti.')
 					else:
 						self.error.setText('en az bir girdi olmalı')
 					self.con.commit()
 		except Exception as e:
-			self.error.setText("ERR  : \n" + str(e))
+			self.error.setText("ERR  : \n" + str(sys.exc_info()))
 
 	def clear(self):
 		self.title.setText('')
